@@ -48,6 +48,7 @@ async function startSocket() {
         process.exit();
       } else {
         console.log('↻ Intentando reconectar...');
+        await startSocket();
       }
     }
   });
@@ -89,18 +90,18 @@ async function startSocket() {
 async function sendMessages() {
   console.log('🚀 Iniciando socket...');
 
-  while (!sock) {
-    await startSocket();
-    await sleep(1000);
-  }
+  await startSocket();
+  await sleep(10000);
 
   const customers = await db.getCustomers();
   console.log(`📨 ${customers.length} clientes encontrados`);
 
   for (const c of customers) {
     const jid = `57${c.phoneNumber}@s.whatsapp.net`;
-    const msg = `🎓 Hola ${c.firstName}, ¡felicidades por completar *${c.course}*!\n\n👩‍💼 Soy Lina, asesora de desarrollo profesional de *CLEV*. Tenemos una excelente noticia exclusiva para nuestros egresados. ¿Te puedo contar brevemente?`;
 
+    //const msg = `🎓 Hola ${c.firstName}, ¡felicidades por completar *${c.course}*!\n\n👩‍💼 Soy Lina, asesora de desarrollo profesional de *CLEV*. Tenemos una excelente noticia exclusiva para nuestros egresados. ¿Te puedo contar brevemente?`;
+    const msg = `¡Hola ${c.firstName}! Te saluda Lina, de CLEV 👋\n\nFelicitaciones por completar tu diplomado en *${c.course}* en Marzo 🎓\n\nYa tienes tu primera certificación… y ahora puedes obtener una segunda, avalada por la Universidad FET.\n\n✅ Sin estudiar más\n✅ Más respaldo en tu hoja de vida\n✅ Suma horas académicas y prestigio\n\n¿Te gustaría saber cómo obtenerla por un valor exclusivo para egresados?`;
+    
     const buttons = [{
       buttonId: 'responder_si',
       buttonText: { displayText: '¡Sí, por favor!' },
@@ -111,9 +112,9 @@ async function sendMessages() {
       await sock.sendMessage(jid, {
         text: msg,
         footer: 'Responde tocando el botón',
-        buttons: buttons,
+        buttons,
         headerType: 1
-      }, { messageType: 'buttonsMessage' });
+      });
 
       await db.markAsContacted(c.phoneNumber);
       console.log(`✅ Mensaje enviado a ${c.phoneNumber}`);
